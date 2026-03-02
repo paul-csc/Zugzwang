@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "bitboard.h"
 #include "uci.h"
 

@@ -1,6 +1,8 @@
 #pragma once
+
 #include "board.h"
 #include <sstream>
+#include <string_view>
 
 namespace Zugzwang {
 

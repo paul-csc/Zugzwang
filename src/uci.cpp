@@ -1,8 +1,6 @@
-#include "uci.h"
+#include "pch.h"
 #include "movegen.h"
-#include <iostream>
-#include <string>
-#include <vector>
+#include "uci.h"
 
 namespace Zugzwang {
 
@@ -13,7 +11,7 @@ UCIEngine::UCIEngine(int argc, char** argv) : board() { board.ParseFen(StartFEN)
 void UCIEngine::Loop() {
     std::string token, cmd;
 
-    do {
+    while (true) {
         if (!getline(std::cin, cmd)) {
             cmd = "quit";
         }
@@ -32,13 +30,12 @@ void UCIEngine::Loop() {
             position(is);
         } else if (token == "go") {
             go(is);
-        }
-
-        else if (!token.empty() && token[0] != '#') {
+        } else if (token == "quit") {
+            break;
+        } else if (!token.empty() && token[0] != '#') {
             std::cout << "Unknown command: '" << cmd << "'.\n";
         }
-
-    } while (token != "quit");
+    }
 }
 
 void UCIEngine::go(std::istringstream& is) {
@@ -99,7 +96,8 @@ bool UCIEngine::isMoveStr(std::string_view str) {
     if (str.size() != 4 && str.size() != 5) {
         return false;
     }
-    if (!IsFileValid(str[0]) || !IsRankValid(str[1]) || !IsFileValid(str[2]) || !IsRankValid(str[3])) {
+    if (!IsFileValid(str[0]) || !IsRankValid(str[1]) || !IsFileValid(str[2]) ||
+        !IsRankValid(str[3])) {
         return false;
     }
     if (str[0] == str[2] && str[1] == str[3]) { // same from and to square

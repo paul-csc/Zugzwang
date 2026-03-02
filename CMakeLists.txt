@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 project(Zugzwang)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -17,10 +17,12 @@ set(SOURCES
     src/movegen.h
     src/uci.h
     src/types.h
+
+    src/pch.h
 )
 
 add_executable(Zugzwang ${SOURCES})
 
-source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${SOURCES})
+target_precompile_headers(${PROJECT_NAME} PRIVATE src/pch.h)
 
 target_include_directories(Zugzwang PRIVATE "${PROJECT_SOURCE_DIR}/src")

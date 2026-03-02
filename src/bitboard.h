@@ -7,8 +7,6 @@ namespace Zugzwang {
 
 class Bitboards {
   public:
-    Bitboards() = delete;
-
     static void Init();
 
     template <PieceType P>
@@ -17,8 +15,9 @@ class Bitboards {
             return RookAttackTable[square][((occupancy & RookMasks[square]) * RookMagics[square]) >>
                 RookShifts[square]];
         } else if constexpr (P == BISHOP) {
-            return BishopAttackTable[square][((occupancy & BishopMasks[square]) * BishopMagics[square]) >>
-                BishopShifts[square]];
+            return BishopAttackTable[square]
+                                    [((occupancy & BishopMasks[square]) * BishopMagics[square]) >>
+                                        BishopShifts[square]];
         } else if constexpr (P == QUEEN) {
             return GetAttacks<ROOK>(square, occupancy) | GetAttacks<BISHOP>(square, occupancy);
         } else if constexpr (P == PieceType::KNIGHT) {
@@ -31,6 +30,8 @@ class Bitboards {
     }
 
   private:
+    Bitboards() {}
+
     static const int RookShifts[SQUARE_NB];
     static const int BishopShifts[SQUARE_NB];
     static const Bitboard RookMagics[SQUARE_NB];
@@ -51,12 +52,12 @@ class Bitboards {
 };
 
 inline Bitboard SquareBb(Square s) {
-    ASSERT(IsOk(s));
+    assert(IsOk(s));
     return (1ULL << s);
 }
 
 inline Square PopLsb(Bitboard& b) {
-    ASSERT(b);
+    assert(b);
     Square index = Square(std::countr_zero(b));
     b &= (b - 1);
     return index;

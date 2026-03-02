@@ -1,7 +1,7 @@
-#include "movegen.h"
+#include "pch.h"
 #include "bitboard.h"
 #include "board.h"
-#include "types.h"
+#include "movegen.h"
 
 namespace Zugzwang {
 namespace {
@@ -10,7 +10,8 @@ void GenerateSlidingMoves(const Board& board, MoveList& list) {
     const Color side = board.sideToMove;
     const Bitboard occupancy = board.byColorBB[WHITE] | board.byColorBB[BLACK];
 
-    static constexpr Piece pieceIdx[2][3] = { { W_BISHOP, W_ROOK, W_QUEEN }, { B_BISHOP, B_ROOK, B_QUEEN } };
+    static constexpr Piece pieceIdx[2][3] = { { W_BISHOP, W_ROOK, W_QUEEN },
+        { B_BISHOP, B_ROOK, B_QUEEN } };
 
     for (int i = 0; i < 3; i++) {
         const Piece piece = pieceIdx[side][i];
@@ -75,7 +76,7 @@ void GeneratePawnMoves(const Board& board, MoveList& list) {
         const Rank rank = RankOf(startSq);
         const Square oneForward = startSq + PawnPush(color);
 
-        ASSERT(IsOk(oneForward));
+        assert(IsOk(oneForward));
 
         // pushes
         if (board.pieces[oneForward] == NO_PIECE) {
@@ -83,7 +84,7 @@ void GeneratePawnMoves(const Board& board, MoveList& list) {
                 add_promotions(startSq, oneForward);
             } else {
                 const Square twoForward = startSq + 2 * PawnPush(color);
-                ASSERT(IsOk(twoForward));
+                assert(IsOk(twoForward));
 
                 list.Insert(Move(startSq, oneForward));
                 if (rank == startRank && board.pieces[twoForward] == NO_PIECE) {

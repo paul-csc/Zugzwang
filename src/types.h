@@ -1,10 +1,7 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
-#include <cstdlib>
-#include <iomanip>
-#include <iostream>
-#include <string>
 
 namespace Zugzwang {
 
@@ -87,20 +84,6 @@ ENABLE_INCR_OPERATORS_ON(Rank)
 
 #undef ENABLE_INCR_OPERATORS_ON
 
-#ifdef NDEBUG
-#define ASSERT(n) ((void)0)
-#else
-#define ASSERT(n)                                                                      \
-    do {                                                                               \
-        if (!(n)) {                                                                    \
-            std::cerr << "Assertion failed: " << #n << "\n";                           \
-            std::cerr << "In file: " << __FILE__ << ", at line: " << __LINE__ << "\n"; \
-            std::cin.get();                                                            \
-            std::exit(1);                                                              \
-        }                                                                              \
-    } while (0)
-#endif
-
 constexpr Direction operator+(Direction d1, Direction d2) { return Direction(int(d1) + int(d2)); }
 constexpr Direction operator*(int i, Direction d) { return Direction(i * int(d)); }
 
@@ -120,7 +103,7 @@ constexpr Piece MakePiece(Color c, PieceType pt) { return Piece((c << 3) + pt); 
 constexpr PieceType TypeOf(Piece pc) { return PieceType(pc & 7); }
 
 inline Color ColorOf(Piece pc) {
-    ASSERT(pc != NO_PIECE);
+    assert(pc != NO_PIECE);
     return Color(pc >> 3);
 }
 
@@ -133,16 +116,6 @@ constexpr Rank RankOf(Square s) { return Rank(s >> 3); }
 constexpr Rank RelativeRank(Color c, Rank r) { return Rank(r ^ (c * 7)); }
 
 constexpr Direction PawnPush(Color c) { return c == WHITE ? NORTH : SOUTH; }
-
-inline std::ostream& operator<<(std::ostream& os, const Square& sq) {
-    if (!IsOk(sq)) {
-        os << "none";
-        return os;
-    }
-
-    os << char('a' + FileOf(sq)) << char('1' + RankOf(sq));
-    return os;
-}
 
 enum MoveType { NORMAL, PROMOTION = 1 << 14, EN_PASSANT = 2 << 14, CASTLING = 3 << 14 };
 
@@ -167,12 +140,12 @@ class Move {
     }
 
     constexpr Square FromSq() const {
-        ASSERT(IsOk());
+        assert(IsOk());
         return Square((data >> 6) & 0x3F);
     }
 
     constexpr Square ToSq() const {
-        ASSERT(IsOk());
+        assert(IsOk());
         return Square(data & 0x3F);
     }
 
@@ -188,38 +161,19 @@ class Move {
     constexpr bool operator!=(const Move& m) const { return data != m.data; }
 
     constexpr explicit operator bool() const { return data != 0; }
-
-    friend inline std::ostream& operator<<(std::ostream& os, const Move& move) {
-        os << move.FromSq() << move.ToSq();
-
-        if (move.TypeOf() == PROMOTION) {
-            char promoCh;
-            switch (move.PromotionType()) {
-                case KNIGHT: promoCh = 'n'; break;
-                case ROOK: promoCh = 'r'; break;
-                case BISHOP: promoCh = 'b'; break;
-                default: promoCh = 'q'; break;
-            }
-            os << promoCh;
-        }
-
-        return os;
-    }
 };
 
 class MoveList {
-  private:
-    Move moves[MAX_MOVES];
-    int count = 0;
-
   public:
+    MoveList() : count(0) {}
+
     void Insert(Move move) {
-        ASSERT(count < MAX_MOVES);
+        assert(count < MAX_MOVES);
         moves[count++] = move;
     }
 
     Move& operator[](int i) {
-        ASSERT(i >= 0 && i < count);
+        assert(i >= 0 && i < count);
         return moves[i];
     }
 
@@ -231,13 +185,9 @@ class MoveList {
     inline const Move* begin() const { return moves; }
     inline const Move* end() const { return moves + count; }
 
-    friend inline std::ostream& operator<<(std::ostream& os, const MoveList& list) {
-        for (int i = 0; i < list.count; ++i) {
-            os << std::setw(2) << i + 1 << ": " << list.moves[i] << "\n";
-        }
-        os << "Total: " << list.count << " moves.\n";
-        return os;
-    }
+  private:
+    Move moves[MAX_MOVES];
+    int count;
 };
 
 } // namespace Zugzwang

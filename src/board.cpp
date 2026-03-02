@@ -1,10 +1,7 @@
+#include "pch.h"
+#include "bitboard.h"
 #include "board.h"
 #include "movegen.h"
-#include "types.h"
-#include <chrono>
-#include <cstring>
-#include <iostream>
-#include <sstream>
 
 namespace Zugzwang {
 namespace {
@@ -59,7 +56,7 @@ void Board::initZobrist() {
 }
 
 void Board::putPiece(Piece piece, Square sq) {
-    ASSERT(piece != NO_PIECE);
+    assert(piece != NO_PIECE);
     Color color = ColorOf(piece);
 
     pieces[sq] = piece;
@@ -70,7 +67,7 @@ void Board::putPiece(Piece piece, Square sq) {
 
 void Board::removePiece(Square sq) {
     Piece piece = pieces[sq];
-    ASSERT(piece != NO_PIECE);
+    assert(piece != NO_PIECE);
 
     Color color = ColorOf(piece);
 
@@ -85,12 +82,12 @@ void Board::removePiece(Square sq) {
             return;
         }
     }
-    ASSERT(false);
+    assert(false);
 }
 
 void Board::movePiece(Square from, Square to) {
     Piece piece = pieces[from];
-    ASSERT(piece != NO_PIECE);
+    assert(piece != NO_PIECE);
 
     Color color = ColorOf(piece);
 
@@ -108,7 +105,7 @@ void Board::movePiece(Square from, Square to) {
             return;
         }
     }
-    ASSERT(false);
+    assert(false);
 }
 
 void Board::generatePosKey() {
@@ -253,7 +250,7 @@ bool Board::MakeMove(const Move& move) {
             case SQ_C8: movePiece(SQ_A8, SQ_D8); break;
             case SQ_G1: movePiece(SQ_H1, SQ_F1); break;
             case SQ_G8: movePiece(SQ_H8, SQ_F8); break;
-            default: ASSERT(false);
+            default: assert(false);
         }
     }
 
@@ -321,7 +318,7 @@ void Board::UnmakeMove(const Move& move) {
             case SQ_C8: movePiece(SQ_D8, SQ_A8); break;
             case SQ_G1: movePiece(SQ_F1, SQ_H1); break;
             case SQ_G8: movePiece(SQ_F8, SQ_H8); break;
-            default: ASSERT(false);
+            default: assert(false);
         }
     }
 
@@ -415,7 +412,25 @@ uint64_t Board::PerftTest(int depth) {
 
         perft(depth - 1);
         UnmakeMove(move);
-        std::cout << move << ": " << perftLealNodes - before << "\n";
+
+        auto PrintSq = [](Square sq) {
+            std::cout << char('a' + FileOf(sq)) << char('1' + RankOf(sq));
+        };
+        PrintSq(move.FromSq());
+        PrintSq(move.ToSq());
+
+        if (move.TypeOf() == PROMOTION) {
+            char promoCh;
+            switch (move.PromotionType()) {
+                case KNIGHT: promoCh = 'n'; break;
+                case ROOK: promoCh = 'r'; break;
+                case BISHOP: promoCh = 'b'; break;
+                default: promoCh = 'q'; break;
+            }
+            std::cout << promoCh;
+        }
+
+        std::cout << ": " << perftLealNodes - before << "\n";
     }
 
     const auto stop = high_resolution_clock::now();
