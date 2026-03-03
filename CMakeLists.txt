@@ -26,3 +26,11 @@ add_executable(Zugzwang ${SOURCES})
 target_precompile_headers(${PROJECT_NAME} PRIVATE src/pch.h)
 
 target_include_directories(Zugzwang PRIVATE "${PROJECT_SOURCE_DIR}/src")
+
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    target_compile_options(Zugzwang PRIVATE
+        -O3
+        -march=native
+        -flto
+    )
+endif()

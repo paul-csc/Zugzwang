@@ -28,13 +28,13 @@ void GenerateMoves(const Position& pos, MoveList& list, Bitboard target) {
 
 template <Color Us>
 void GeneratePawnMoves(const Position& pos, MoveList& list) {
-    const Piece pawn = MakePiece(Us, PAWN);
+    constexpr Piece pawn = MakePiece(Us, PAWN);
     const int pieceNb = pos.pieceNb[pawn];
 
-    const Rank startRank = RelativeRank(Us, RANK_2);
-    const Rank promoRank = RelativeRank(Us, RANK_7);
+    constexpr Rank startRank = RelativeRank(Us, RANK_2);
+    constexpr Rank promoRank = RelativeRank(Us, RANK_7);
 
-    auto add_promotions = [&](Square startSq, Square toSq) {
+    auto addPromotions = [&](Square startSq, Square toSq) {
         list.Insert(Move::Make<PROMOTION>(startSq, toSq, QUEEN));
         list.Insert(Move::Make<PROMOTION>(startSq, toSq, ROOK));
         list.Insert(Move::Make<PROMOTION>(startSq, toSq, BISHOP));
@@ -53,7 +53,7 @@ void GeneratePawnMoves(const Position& pos, MoveList& list) {
         // pushes
         if (pos.board[oneForward] == NO_PIECE) {
             if (rank == promoRank) {
-                add_promotions(from, oneForward);
+                addPromotions(from, oneForward);
             } else {
                 const Square twoForward = from + 2 * PawnPush(Us);
                 assert(IsOk(twoForward));
@@ -72,7 +72,7 @@ void GeneratePawnMoves(const Position& pos, MoveList& list) {
         while (captures) {
             Square to = PopLsb(captures);
             if (rank == promoRank) {
-                add_promotions(from, to);
+                addPromotions(from, to);
             } else {
                 list.Insert(Move(from, to));
             }
@@ -85,15 +85,15 @@ void GeneratePawnMoves(const Position& pos, MoveList& list) {
     }
 }
 
+template <Color Us>
 void GenerateKingMoves(const Position& pos, MoveList& list) {
-    const Color color = pos.sideToMove;
-    Square startSq = pos.kingSquare[color];
+    Square startSq = pos.kingSquare[Us];
 
-    Bitboard attacks = Bitboards::GetAttacks<KING>(startSq) & ~pos.byColorBB[color];
+    Bitboard attacks = Bitboards::GetAttacks<KING>(startSq) & ~pos.byColorBB[Us];
     SplatMoves(list, startSq, attacks);
 
     // castling
-    if (color == WHITE) {
+    if constexpr (Us == WHITE) {
         if (pos.castlingRights & WHITE_OO) {
             if (pos.board[SQ_F1] == NO_PIECE && pos.board[SQ_G1] == NO_PIECE) {
                 if (!MoveGen::IsSquareAttacked(pos, SQ_E1, BLACK) &&
@@ -138,12 +138,12 @@ template <Color Us>
 void GeneratePseudoMoves(const Position& pos, MoveList& list) {
     const Bitboard target = ~pos.byColorBB[Us];
 
-    GenerateMoves<Us, QUEEN>(pos, list, target);
+    GeneratePawnMoves<Us>(pos, list);
+    GenerateMoves<Us, KNIGHT>(pos, list, target);
     GenerateMoves<Us, BISHOP>(pos, list, target);
     GenerateMoves<Us, ROOK>(pos, list, target);
-    GenerateMoves<Us, KNIGHT>(pos, list, target);
-    GeneratePawnMoves<Us>(pos, list);
-    GenerateKingMoves(pos, list);
+    GenerateMoves<Us, QUEEN>(pos, list, target);
+    GenerateKingMoves<Us>(pos, list);
 }
 
 } // namespace
@@ -154,7 +154,13 @@ bool IsSquareAttacked(const Position& pos, Square sq, Color attacker) {
     const Bitboard attackers = pos.byColorBB[attacker];
     const Bitboard occ = pos.byTypeBB[ALL_PIECES];
 
-    if (Bitboards::GetAttacks<PAWN>(sq, 0, ~attacker) & attackers & pos.byTypeBB[PAWN]) {
+    Bitboard bishops = pos.byTypeBB[BISHOP] | pos.byTypeBB[QUEEN];
+    if (Bitboards::GetAttacks<BISHOP>(sq, occ) & attackers & bishops) {
+        return true;
+    }
+
+    Bitboard rooks = pos.byTypeBB[ROOK] | pos.byTypeBB[QUEEN];
+    if (Bitboards::GetAttacks<ROOK>(sq, occ) & attackers & rooks) {
         return true;
     }
 
@@ -162,19 +168,11 @@ bool IsSquareAttacked(const Position& pos, Square sq, Color attacker) {
         return true;
     }
 
+    if (Bitboards::GetAttacks<PAWN>(sq, 0, ~attacker) & attackers & pos.byTypeBB[PAWN]) {
+        return true;
+    }
+
     if (Bitboards::GetAttacks<KING>(sq) & attackers & pos.byTypeBB[KING]) {
-        return true;
-    }
-
-    if (Bitboards::GetAttacks<BISHOP>(sq, occ) & attackers & pos.byTypeBB[BISHOP]) {
-        return true;
-    }
-
-    if (Bitboards::GetAttacks<ROOK>(sq, occ) & attackers & pos.byTypeBB[ROOK]) {
-        return true;
-    }
-
-    if (Bitboards::GetAttacks<QUEEN>(sq, occ) & attackers & pos.byTypeBB[QUEEN]) {
         return true;
     }
 

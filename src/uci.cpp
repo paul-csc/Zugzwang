@@ -73,7 +73,7 @@ void UCIEngine::go(std::istringstream& is) {
 
     int depth;
     is >> depth;
-    if (depth >= 1 && depth <= 6) {
+    if (depth >= 1) {
         board.PerftTest(depth);
     }
 }
